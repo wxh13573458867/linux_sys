@@ -1,5 +1,11 @@
-#ifndef _LINUX_SYS_H
-#define _LINUX_SYS_H
+#ifndef SAFE_SHM_H
+#define SAFE_SHM_H
+
+#include <string.h>
+#include <fcntl.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/shm.h>
 
 /*
  *@brief	获取信号量集(只使用信号量集中的第一个信号量)
