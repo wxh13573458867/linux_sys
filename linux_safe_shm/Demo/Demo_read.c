@@ -3,7 +3,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
-#include "linux_sys.h"
+#include "safe_shm.h"
 
 void sighandle(int signo)
 {
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	void *shmbuf = NULL;
 	SEM_Init("./ipc_sys_key.sem", 0x00, &semid);
 	SHM_Init("./ipc_sys_key.shm", 0x00, &shmbufSize, &shmbuf);
-	printf("%d\n", shmbufSize);
+	printf("[%d][%d]\n", semid, shmbufSize);
 	
 	char tempbuf[1024] = { 0 };
 	while(1)
