@@ -6,16 +6,21 @@
 #include "safe_shm.h"
 
 void *shmbuf = NULL;
+void *pShm = NULL;
 
 void handle(void *arg)
 {
 	SHM_Write(shmbuf, 128,  arg, 1024);
-	printf("[%s]\n", (char *)arg);
 	sleep(1);
+	printf("[写入] [%s]\n", (char *)arg);
 }
 
 void sighandle(int signo)
 {
+	if(pShm != NULL){
+		SHM_Secede(pShm);
+	}
+
 	SHM_Destroy("./ipc_sys_key.shm", 0x00);	
 	SEM_Destroy("./ipc_sys_key.sem", 0x00);	
 	
@@ -30,6 +35,7 @@ int main(int argc, char *argv[])
 	SEM_Init("./ipc_sys_key.sem", 0x00, &semid);
 	SHM_Init("./ipc_sys_key.shm", 0x00, &shmbufSize, &shmbuf);
 	printf("[%d][%d]\n", semid, shmbufSize);
+	pShm = shmbuf;
 	
 	char tempbuf[1024] = { 0 };
 	int index = 0;
