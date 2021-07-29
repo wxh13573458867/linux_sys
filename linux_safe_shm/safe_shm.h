@@ -1,7 +1,9 @@
 #ifndef SAFE_SHM_H
 #define SAFE_SHM_H
 
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>

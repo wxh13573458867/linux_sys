@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 //插入数据到队列
 void *p_thread(void *arg)
