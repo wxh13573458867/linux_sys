@@ -33,7 +33,7 @@ void LoopQueue_Destroy(LoopQueue lQ)
 	pthread_mutex_lock(&lQ->mutex);
 	while(lQ->size != 0){
 		free(lQ->nodeArr[lQ->consumer]);
-		lQ->consumer = ++lQ->consumer % lQ->capacity;
+		lQ->consumer = (++lQ->consumer) % lQ->capacity;
 
 		lQ->size--;
 	}
@@ -59,41 +59,34 @@ int LoopQueue_Push(LoopQueue lQ, const void *data)
 		pthread_mutex_lock(&lQ->mutex);
 
 		if(lQ->size == lQ->capacity){
-			switch(lQ->attr & 0xF)
-			{
-				case LOOP_QUEUE_IS_CLOG:
-					{
-						pthread_cond_wait(&lQ->condProducer, &lQ->mutex);
-					}break;
-				case LOOP_QUEUE_NO_CLOG:
-					{
-						pthread_mutex_unlock(&lQ->mutex);
-						return -1;			
-					}break;
-				default:
-					{
-						pthread_mutex_unlock(&lQ->mutex);
-						return -1;
-					}break;
+			if(lQ->isClog){
+				pthread_cond_wait(&lQ->condProducer, &lQ->mutex);
+				if(lQ->size == lQ->capacity){
+					pthread_mutex_unlock(&lQ->mutex);
+					continue;	
+				}
+			}else{
+				pthread_mutex_unlock(&lQ->mutex);
+				return -1;
 			}
 		}
 
-		if(lQ->size == lQ->capacity){
-			pthread_mutex_unlock(&lQ->mutex);
-			continue;	
+		if (!(lQ->nodeArr[lQ->producer])) {
+			lQ->nodeArr[lQ->producer] = (void*)malloc(lQ->nodeSize);
+			if (!lQ->nodeArr[lQ->producer]) {
+				pthread_mutex_unlock(&(lQ->mutex));
+				return -1;
+			}
 		}
 
-		lQ->nodeArr[lQ->producer] = (void *)malloc(lQ->nodeSize);
-		if(!lQ->nodeArr[lQ->producer]){
-			pthread_mutex_unlock(&(lQ->mutex));
-			return -1;
-		}
 		memcpy(lQ->nodeArr[lQ->producer], data, lQ->nodeSize);
 
-		lQ->producer = ++lQ->producer % lQ->capacity;
+		lQ->producer = (++lQ->producer) % lQ->capacity;
 
 		lQ->size++;
-		pthread_cond_signal(&lQ->condConsumer);
+		if(lQ->isClog){
+			pthread_cond_signal(&lQ->condConsumer);
+		}	
 		pthread_mutex_unlock(&lQ->mutex);
 		break;
 	}
@@ -111,38 +104,29 @@ int LoopQueue_Pop(LoopQueue lQ, void *data)
 		pthread_mutex_lock(&lQ->mutex);
 
 		if(lQ->size == 0){
-			switch(lQ->attr & 0xF)
-			{
-				case LOOP_QUEUE_IS_CLOG:
-					{
-						pthread_cond_wait(&lQ->condConsumer, &lQ->mutex);
-					}break;
-				case LOOP_QUEUE_NO_CLOG:
-					{
-						pthread_mutex_unlock(&lQ->mutex);
-						return -1;
-					}break;
-				default:
-					{
-						pthread_mutex_unlock(&lQ->mutex);
-						return -1;
-					}break;
+			if(lQ->isClog){
+				pthread_cond_wait(&lQ->condConsumer, &lQ->mutex);
+				if(lQ->size == 0){
+					pthread_mutex_unlock(&lQ->mutex);
+					continue;	
+				}
+			}else{
+				pthread_mutex_unlock(&lQ->mutex);
+				return -1;
 			}
 		}
 
-		if(lQ->size == 0)
-		{
-			pthread_mutex_unlock(&lQ->mutex);
-			continue;	
-		}
 
 		memcpy(data, lQ->nodeArr[lQ->consumer], lQ->nodeSize);
-		free(lQ->nodeArr[lQ->consumer]);
+		memset(lQ->nodeArr[lQ->consumer], 0x00, lQ->nodeSize);
+		//free(lQ->nodeArr[lQ->consumer]);
 
-		lQ->consumer = ++lQ->consumer % lQ->capacity;
+		lQ->consumer = (++lQ->consumer) % lQ->capacity;
 
 		lQ->size--;
-		pthread_cond_signal(&lQ->condProducer);
+		if(lQ->isClog){
+			pthread_cond_signal(&lQ->condProducer);
+		}
 		pthread_mutex_unlock(&lQ->mutex);
 		break;
 	}
