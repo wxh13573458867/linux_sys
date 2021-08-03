@@ -37,7 +37,7 @@ void *c_thread(void *arg)
 
 int main(int argc, char *argv[])
 {
-	LoopQueue lQ = LoopQueue_Init(5, sizeof(int), LOOP_QUEUE_NO_CLOG);
+	LoopQueue lQ = LoopQueue_Init(5, sizeof(int), LOOP_QUEUE_CLOG | LOOP_QUEUE_MEM_INIT);
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);

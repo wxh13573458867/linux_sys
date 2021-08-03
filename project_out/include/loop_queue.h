@@ -4,11 +4,10 @@
 #include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-#define LOOP_QUEUE_INIT_MEM (0x0001)	//队列初始申请内存
-#define LOOP_QUEUE_TEMP_MEM (0x0002)	//队列临时申请内存
-#define LOOP_QUEUE_IS_CLOG (0x0010)	//队列阻塞
-#define LOOP_QUEUE_NO_CLOG (0x0020)	//队列非阻塞
+#define LOOP_QUEUE_CLOG (1)	//队列阻塞
+#define LOOP_QUEUE_NO_CLOG (0)	//队列非阻塞
 
 typedef struct _LoopQueue
 {
@@ -19,9 +18,8 @@ typedef struct _LoopQueue
 
 	void **nodeArr;
 	int nodeSize;
-	int isClog;
 	
-	int attr;
+	int isClog;
 	pthread_mutex_t mutex;
 	pthread_cond_t condProducer;
 	pthread_cond_t condConsumer;	

@@ -6,8 +6,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define LOOP_QUEUE_CLOG (1)	//队列阻塞
-#define LOOP_QUEUE_NO_CLOG (0)	//队列非阻塞
+#define LOOP_QUEUE_CLOG		(0x01)	//队列阻塞
+#define LOOP_QUEUE_NO_CLOG	(0x02)	//队列非阻塞
+#define LOOP_QUEUE_MEM_INIT	(0x04)	//内存初始时构建
+#define LOOP_QUEUE_MEM_TEMP	(0x08)	//内存使用时构建
 
 typedef struct _LoopQueue
 {
@@ -19,7 +21,7 @@ typedef struct _LoopQueue
 	void **nodeArr;
 	int nodeSize;
 	
-	int isClog;
+	int flags;
 	pthread_mutex_t mutex;
 	pthread_cond_t condProducer;
 	pthread_cond_t condConsumer;	
@@ -29,10 +31,10 @@ typedef struct _LoopQueue
  *@brief	初始化循环队列
  *@param:capacity	循环队列容量
  *@param:nodeSize	单个节点大小
- *@param:isClog	队列读取是否阻塞
+ *@param:flags	队列属性
  *@reruen	成功:循环队列指针	失败:NULL
  **/
-extern LoopQueue LoopQueue_Init(const int capacity, const int nodeSize, const int isClog);
+extern LoopQueue LoopQueue_Init(const int capacity, const int nodeSize, const int flags);
 
 /*
  *@brief	销毁循环队列
